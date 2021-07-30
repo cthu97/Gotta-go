@@ -11,8 +11,6 @@ VALUES
 
 (1, 'Granville Park Public Washroom', 'Hooray for public washrooms – especially during COVID-19! It isn’t lovely but it’s necessary and appreciated.', 'https://tinyurl.com/e5hykjrc', 49.25885323858225, -123.14213473575106),
 
-/* 5 */
-
 (1, 'Gorge Road Walkway Public Washroom', 'Right in the middle of the walk, with parking areas on both sides. It is a bit smelly though. There is a drinking fountain, a water refill station and also a drinking fountain for dogs.', 'https://lh5.googleusercontent.com/p/AF1QipPylUOKVQx-oiy3uRSJSNfKmhgNI-egcBF2MZTa=w426-h240-k-no', 48.45112405310364, -123.4121807498406),
 
 (1, 'Public Washroom on Memorial Crescent', 'A washroom on the edge of graveyard. Yup. Not much to say about that.', 'https://tinyurl.com/4ny4dj8w', 48.409514434685136, -123.34408741508135),
@@ -91,9 +89,16 @@ THANK YOU DONNY AND FATIMA FOR YOUR YEARS OF SERVICE.', 'https://lh5.googleuserc
 (2, 'Sodexo Canada Inc', '4 Stars', 'https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=ySGMxOOYK8JXI4dDsZ1vhA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=275.16776&pitch=0&thumbfov=100', 49.25390746830308, -123.00509401387332),
 
 (2, 'Burnaby Campus Bookstore', 'Just buy the books online dude, dont get ripped off', 'https://lh5.googleusercontent.com/p/AF1QipM0KE6yZmBVkDqrEDCiFpfPj03bGWbaZ6twoOwX=w426-h240-k-no',  49.25173891641876, -123.00132727572652),
+<<<<<<< HEAD
 
 (2, 'No. 1 Beef Noodle', 'One of the better places to go for Taiwanese food! The service is fast. They actually check your temperature before you come inside which is a nice covid precaution.', 'https://lh5.googleusercontent.com/p/AF1QipPCtKosups4eQ6upSoo_QPBeJdNlYfHWUFvAlsr=w426-h240-k-no',49.24268564136905, -123.00391804290398),
 
 (2, 'The Stand', 'Overpriced, I bought a milk, a cookie and a wrap. It came to 17$. Crazy.', 'https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=4lKNEen81FBKoSM5D31_dA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=354.14267&pitch=0&thumbfov=100', 49.25389464667916, -123.00146685941986);
 /* 40 */
+=======
 
+(2, 'No. 1 Beef Noodle', 'One of the better places to go for Taiwanese food! The service is fast. They actually check your temperature before you come inside which is a nice covid precaution.', 'https://lh5.googleusercontent.com/p/AF1QipPCtKosups4eQ6upSoo_QPBeJdNlYfHWUFvAlsr=w426-h240-k-no',49.24268564136905, -123.00391804290398),
+>>>>>>> 67998e6bd32847842337f25d98cf8f46cd76aa2b
+
+(2, 'The Stand', 'Overpriced, I bought a milk, a cookie and a wrap. It came to 17$. Crazy.', 'https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=4lKNEen81FBKoSM5D31_dA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=354.14267&pitch=0&thumbfov=100', 49.25389464667916, -123.00146685941986);
+/* 40 */

@@ -58,12 +58,18 @@ $(document).ready(function () {
     })
   };
 
+
+
   const getMapNearUserLocation = () => {
-    console.log(window.user);
+    const $div = $(`<div><h3>Nearby Maps</h3><div class='mapButtons'></div></div>`);
+    const mapDiv = $('.mapButtons');
+    mapDiv.empty();
+    $('.sidebar h3').empty();
+    $('.nearByMaps').empty();
+    $('.sidebar footer').empty();
+    $div.appendTo(mapDiv);
     $.get(`/api/maps/${window.user.latitude}/${window.user.longitude}`, (obj) => {
       console.log('map obj according to location', obj.maps);
-      const mapDiv = $('.mapButtons')
-      mapDiv.empty();
       for (let i = 0; i < obj.maps.length; i++) {
         const map_name = obj.maps[i].name;
         const map_id = obj.maps[i].id;
@@ -167,6 +173,17 @@ $(document).ready(function () {
 
       renderPins(result.maps[0]);
 
+      //make add button link
+      const $addtoFave = $('<a href="#" class="addFave">Add map to Favourites</a>')
+      $addtoFave.appendTo($sidebar)
+
+      // add map to favourites
+      $('.sidebar').on('click', '.addFave', () => {
+        console.log(`map_id ${buttonID}, user_id: ${window.user.id}`)
+        $.post('/api/faveMaps/', { map_id: buttonID, user_id: window.user.id }),
+        renderNav();
+      })
+
       $('.sidebar').on('click', '.pinButtons', function () {
         const buttonID = $(this).attr('id');
         console.log('pin button clicked id:', buttonID);
@@ -208,6 +225,20 @@ $(document).ready(function () {
   });
 
 
+
+  // nearby button on click
+  $('.sidebar').on('click', '.nearByMaps', function() {
+    getMapNearUserLocation();
+    const $nearByBackButton = $(`<div class="nearByBackButton"><button>back</button></div>`);
+    $nearByBackButton.appendTo($('.sidebar'));
+  });
+
+  // nearby BACK button on click
+  $('.sidebar').on('click', '.nearByBackButton', function() {
+    renderNavLoggedIn();
+  });
+
+
   const renderNavLoggedIn = () => {
     const user_id = window.user.id;
     $('.sidebar').empty();
@@ -225,8 +256,12 @@ $(document).ready(function () {
       // update sidebar username
       $(".sidebar header").text(`user: ${username}`);
 
+      // make nearby button
+      const $nearbyMapButton = $('<div class="nearByMaps"><button>Nearby Maps</button></div>');
+      $nearbyMapButton.appendTo($('.sidebar'));
+
       // make create map button
-      const $createButton = $('<footer><button class="createMap">create map</button></footer>');
+      const $createButton = $('<footer><button class="createMap">Create Map</button></footer>');
       $createButton.appendTo($('.sidebar'));
 
       const mapDiv = $(".mapButtons");
@@ -363,13 +398,6 @@ $(document).ready(function () {
           console.log('posted to both tables', obj);
         });
       })
-      // .then((obj) => {
-      //   window.reload();
-      //   console.log('did we just post? obj:', obj)
-      //   $.get(`/api/users/${user_id}`, (obj) => {
-      //     console.log('obj:', obj)
-      //   });
-      //   });
     });
 
     $('.pin_container').on('click', '.cancel', function(e){
@@ -420,6 +448,7 @@ $(document).ready(function () {
   });
 
   const renderNav = () => {
+    $('.sidebar').empty();
     if (userIsLoggedIn()) {
       console.log('user is logged in');
       updateUserLocation();
@@ -428,11 +457,7 @@ $(document).ready(function () {
       console.log('usr is not logged in');
       const $sidebar = $('.sidebar');
       $sidebar.empty();
-      const $nearbyMaps = $(`<header>user not logged in</header>
-      <div>
-        <h3>Nearby Maps</h3>
-        <div class='mapButtons'></div>
-      </div>`);
+      const $nearbyMaps = $(`<header>user not logged in</header>`);
       $nearbyMaps.appendTo($sidebar);
       updateUserLocation();
       getMapNearUserLocation();
