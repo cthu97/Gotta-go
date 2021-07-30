@@ -116,6 +116,31 @@ img{
   background-color: white;
   border: none;
   color: black;
+  transform: translateY(-5px);
+}
+
+.createMap:active {
+  transform: translateY(5px);
+}
+
+.nearByButton {
+  background-color: black;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+.nearByButton:hover {
+  background-color: white;
+  border: none;
+  color: black;
+  transform: translateY(-5px);
 }
 
 #cancelButton {
@@ -168,3 +193,57 @@ img{
   border:rgb(175, 172, 172) 2px solid;
   background-color: grey;
 }
+
+button {
+  text-align: right;
+  z-index: 99;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button:hover {
+  color: white;
+  background-color: black;
+  transform: translateX(10px);
+}
+
+button:active {
+  transform: translateY(5px);
+  transform: translateX(10px);
+}
+
+.createPin {
+  font-size: 30px;
+}
+
+.createPin:hover {
+  font-size: 40px;
+}
+
+.back {
+  font-size: 30px;
+}
+
+.back:hover {
+  font-size: 40px
+}
+
+.addFave {
+  text-align: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.addFave:hover {
+  color: pink;
+  transform: translateY(-5px);
+}
+
+.addFave:active {
+  transform: translateY(5px);
+}
+

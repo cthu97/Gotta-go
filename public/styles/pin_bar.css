@@ -8,8 +8,13 @@ img.image {
   padding: 0.05vw;
 }
 
+.toggle_button:active {
+  transform: translateX(3px);
+}
+
 .toggle_button:hover {
   background-color: rgb(127, 235, 145);
+  transform: translateX(-3px);
 }
 
 .toggle_button:before {
