@@ -82,3 +82,18 @@ const setUserLocation = (user) => {
     }
   })
 };
+
+const userLocation = function() {
+  const userCoords = [window.user.latitude, window.user.longitude];
+  return userCoords
+
+  // $.get('/api/users/', (obj) => {
+  //   const user_id = obj.user_id;
+  //   $.get(`/api/users/${user_id}/location`, (obj) => {
+  //     const location = [obj.userData[0].latitude, obj.userData[0].longitude];
+  //     console.log("location in func: ", location);
+  //   })
+  // });
+};
+
+const userDistance = (location) => {return Math.round(map.distance(userLocation(), location))};

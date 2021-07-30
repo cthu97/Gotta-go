@@ -1,18 +1,7 @@
-//             merge pins side bar
-// ***** TODO: make onclick function for pins
-//             make map a layer group that contains pins
-//             make button for user to favourite a map
-//             show distance away from the user in the pin panel
-//             rating system
-
-
 // define a default user location at Vancouver
 window.user = { latitude: 49.260833, longitude: -123.113889 };
 
 $(document).ready(function () {
-
-
-
   const makeUserPin = (lat, long, content) => {
     const latlng = L.latLng(lat, long);
     const myIcon = L.icon({
@@ -24,7 +13,7 @@ $(document).ready(function () {
     const marker = L.marker(latlng, { icon: myIcon }).addTo(window.map);
     const popup = L.popup().setContent(content);
     marker.bindPopup(popup).openPopup();
-    map.panTo([lat, long], 15);
+    map.flyTo([lat, long], 15);
   };
 
   const updateUserLocation = () => {
@@ -86,9 +75,77 @@ $(document).ready(function () {
     });
   };
 
+  const renderPins = (map) => {
+    const map_id = map.id;
+    const map_name = map.name;
+    const $sidebar = $('.sidebar');
+    $sidebar.empty();
+    //get pin buttons from maps
+    $.get(`/api/mapPins/${map_id}`, (obj) => {
+      const $h3 = $(`<div class='pins-container'><h3>Pins for ${map_name}</h3></div><br>`);
+      $h3.appendTo($sidebar);
+      for (let i = 0; i < obj.length; i++) {
+        const { id, title, latitude, longitude } = obj[i];
+        const distance = userDistance([latitude, longitude]);
+        const ids = id.toString() + "-" + map_id.toString();
+        console.log("id to string", ids);
+        const pinButton = $(`<div class='pinButtons'><div>${title}</div> ${distance}m away </div>`);
+        const deleteButton = $(`<div class="deleteButtons">delete</div><br><br>`);
+        console.log('pinButton', pinButton);
+        $(pinButton).attr('id', id);
+        $(deleteButton).attr('id', ids);
+        pinButton.appendTo($h3);
+        deleteButton.appendTo($h3);
+      }
+    })
+      .then(() => {
+        // make create pin button
+        const $createPin = $(`<div><button class="createPin" id="${map_id}">create pin</button></div>`);
+        $createPin.appendTo($('.pins-container'));
+        const $backButton = $('</br><button>back</button>')
+        $backButton.appendTo($('.sidebar'))
+        $($backButton).on('click', function () {
+          renderNav();
+          getAllPins();
+        });
+      })
+  };
+
+  // deleting specific pin
+  $('.sidebar').on('click', '.deleteButtons', function() {
+    const id = $(this).attr('id'); // pin_id,map_id
+    const $this =  $(this);
+    console.log($this);
+    const ids = id.split('-');
+    const pin_id = ids[0];
+    const map_id = ids[1];
+    console.log('pins', pin_id, map_id)
+    //post returns updated map_id without pins
+    $.ajax({
+      url: `/api/mapPins/${pin_id}/${map_id}`,
+      type: 'DELETE',
+      success: function(result) {
+        console.log('button deleted');
+        $.get(`/api/maps/${map_id}`, (obj) => {
+        console.log('after deleting relationship got:', obj.maps[0]);
+        renderPins(obj.maps[0]);
+        });
+      }
+    });
+  });
+
   // clicking any map button
-  $('.sidebar').on('click', '.map-button', function () {
-    const zoom = 14;
+  $('.sidebar').on('click', '.map-button', function() {
+    // remove all the user defined map layers on map
+    map.eachLayer(function (layer) {
+      if (layer.map_id) {
+        map.removeLayer(layer);
+      }
+    });
+    if (window.allPins) {
+      map.removeLayer(window.allPins);
+    }
+
     const buttonID = $(this).attr('id');
     console.log("button ID = " + buttonID);
 
@@ -98,38 +155,53 @@ $(document).ready(function () {
       const map_lat = result.maps[0].latitude;
       const map_long = result.maps[0].longitude;
       const map_name = result.maps[0].name;
-      map.panTo([map_lat, map_long], zoom);
+
+      window.mapLayers.eachLayer(function (layer) {
+        if (layer.map_id === map_id) {
+          layer.addTo(map);
+        }
+      });
+      map.flyTo([map_lat, map_long], 15);
       const $sidebar = $('.sidebar');
       $sidebar.empty();
 
-      //get pin buttons from maps
-      $.get(`/api/mapPins/${map_id}`, (obj) => {
-        const $h3 = $(`<div><h3>Pins for ${map_name}</h3></div><br>`);
-        $h3.appendTo($('.sidebar'));
-        for (let i = 0; i < obj.length; i++) {
-          const { pin_id, title, latitude, longitude } = obj[i];
-          const pinButton = $(`<div class='pinButtons'>${title} @${latitude}, ${longitude}</div><br>`);
-          $(pinButton).attr('id', `${pin_id}`);
-          pinButton.appendTo($h3);
-        }
-      })
-        .then(() => {
-          const $backButton = $('</br><button>back</button>')
-          $backButton.appendTo($('.sidebar'))
-          $($backButton).on('click', function () {
-            renderNav();
-          });
-        })
+      renderPins(result.maps[0]);
+
       $('.sidebar').on('click', '.pinButtons', function () {
-        const zoom = 14;
         const buttonID = $(this).attr('id');
+        console.log('pin button clicked id:', buttonID);
         $.getJSON(`http://localhost:8080/api/pins/${buttonID}`, function (result) {
           console.log('result', result);
-          const pin_id = result.pins[0].id;
-          const pin_lat = result.pins[0].latitude;
-          const pin_long = result.pins[0].longitude;
-          const pin_name = result.pins[0].name;
-          map.panTo([pin_lat, pin_long], zoom);
+          const pin = result.pins[0];
+          const pin_lat = pin.latitude;
+          const pin_long = pin.longitude;
+          map.flyTo([pin_lat, pin_long], 17);
+          window.mapLayers.eachLayer(function (layer) {
+            layer.eachLayer(function (marker) {
+              if (marker.pin_id == buttonID) {
+                console.log('found a match, pin:', marker.pin_id);
+                marker.openPopup();
+
+                // refactor into a function
+                const $title = $('<header>', {'class': 'pin_title'}).text(pin.title);
+                const $img = $('<img>', {'class': 'image'}).attr('src', pin.image_url);
+                const $description = $('<p>', { 'class': 'write_up'}).text(pin.description);
+                const $descriptionDiv = $('<div>', { 'class': 'description'});
+                const $nav = $('<nav>', {'class': 'pin_bar'});
+                const $footer = $('<footer>');
+                const $rateButton = $('<button>', {'class': 'edit_pin'}).text('Rate Bathroom');
+                const $editButton = $('<button>', {'class': 'edit_pin'}).text('edit pin').attr('hidden', true);
+                const $addButton = $('<button>', {'class': 'add_pin'}).attr('hidden', true).text('report pin');
+                $descriptionDiv.append($img, $description);
+                $footer.append($rateButton, $editButton, $addButton);
+                $nav.append($title, $descriptionDiv, $footer);
+                $('div.pin_container').empty();
+                $('div.pin_container').append($nav);
+                $('div.pin_details').addClass('left_side') //animate this
+                $('.toggle_button').removeClass('toggle_open').addClass('toggle_close')
+              }
+            });
+          });
         })
       })
     })
@@ -157,10 +229,6 @@ $(document).ready(function () {
       const $createButton = $('<footer><button class="createMap">create map</button></footer>');
       $createButton.appendTo($('.sidebar'));
 
-      // make create pin button
-      const $createPin = $('<div><button class="createPin">create pin</button></div>');
-      $createPin.appendTo($createButton);
-
       const mapDiv = $(".mapButtons");
 
       for (let i = 0; i < obj.userData.length; i++) {
@@ -173,8 +241,6 @@ $(document).ready(function () {
         // console.log('map button id', mapButton.attr('id'));
         $mapButton.appendTo(mapDiv);
       }
-
-
     });
 
     // create map form
@@ -234,32 +300,35 @@ $(document).ready(function () {
     //form submit for creating pins
     const $pinform = $(`<form>
     <input type="hidden" name="creator_id" value="${user_id}" />
-
     <label for="title">Pin Name:</label><br><br>
-    <input type="text" name="name" id="name" placeholder="New Pin" /><br><br>
-
+    <input type="text" name="title" id="name" placeholder="New Pin" /><br><br>
     <label for="description">Description:</label><br><br>
-    <input type="text" name="latitude" id="latitude" placeholder="48.2827" /><br><br>
-
+    <textarea type="text" name="description" placeholder="description" /><br><br>
     <label for="img_url">Image URL:</label><br><br>
-    <input type="text" name="longitude" id="longitude" placeholder="-124.1207" /><br><br>
+    <input type="text" name="image_url" id="image" placeholder="image url" /><br><br>
     <p class="submit_popup">Please click on the map where you would like to create your pin.</p>
     <label for="latitude" class="pinlat" hidden></label><br>
+    <input type="text" class="pinlat" name="latitude" hidden />
     <label for="longitude" class="pinlng" hidden></label><br>
+    <input type="text" class="pinlng" name="longitude" hidden/>
+    <input type="text" id="form-map-id" name="map_id" hidden />
     <button class="submit_popup" type="submit" hidden>submit</button>
-    <button type="button" class="cancel">cancel</button>
-    </form> `);
+    <button class="cancel" type="cancel">cancel</button>
+    </form>`);
 
     //clicking createPin button
     $('.sidebar').on('click', '.createPin', function() {
+      const map_id = $(this).attr('id');
+      console.log('createpin on click mapid', map_id);
+      //$('#form-map-id').val(map_id);
       const $pin_bar = $('div.pin_container');
       $pin_bar.empty();
       $pin_bar.append($pinform);
       $('div.pin_details').addClass('left_side') //animate this
       $('.toggle_button').removeClass('toggle_open').addClass('toggle_close')
-      let marker = {};
 
-      map.on('click', function(e) {
+      window.marker = {};
+      window.onClickMap = (e) => {
         lat = e.latlng.lat;
         lon = e.latlng.lng;
         if (marker != undefined) {
@@ -271,34 +340,52 @@ $(document).ready(function () {
         $('button.submit_popup').show();
         $('label.pinlat').show().text(`latitude: ${e.latlng.lat}`)
         $('label.pinlng').show().text(`longitude: ${e.latlng.lng}`)
-      });
+        $('input.pinlat').val(e.latlng.lat)
+        $('input.pinlng').val(e.latlng.lng)
+        $('#form-map-id').val(map_id);
+      };
+
+      map.on('click', onClickMap);
     })
 
-    //     WIP
-    // $pinform.submit((event) => {
-    //   event.preventDefault();
-    //   const data = $pinform.serialize();
-    //   $.post(`/api/pins/`, data)
-    //     .then(() => {
-    //       console.log(data);
-    //       $.get(`/api/users/${user_id}`, (obj) => {
-    //         location.reload();
-    //       });
-    //     });
-    // });
+    $pinform.submit((event) => {
+      event.preventDefault();
+      const data = $pinform.serialize();
+      console.log('form submitted, data is', data);
+      // get map_id
+      console.log('posting to ajax');
+      $.post(`/api/pins/`, data)
+      .then(obj => {
+        const pinID = obj.pin[0].id;
+        console.log('line 323', obj, 'dafs', obj.pin[0].id );
+        $.post(`/api/mapPins/${obj.map_id}`, {pinID})
+        .then(obj => {
+          console.log('posted to both tables', obj);
+        });
+      })
+      // .then((obj) => {
+      //   window.reload();
+      //   console.log('did we just post? obj:', obj)
+      //   $.get(`/api/users/${user_id}`, (obj) => {
+      //     console.log('obj:', obj)
+      //   });
+      //   });
+    });
 
     $('.pin_container').on('click', '.cancel', function(e){
       e.preventDefault();
       console.log('cancel clicked');
       const $pin_bar = $('div.pin_container');
-      map.off();
+      const div = L.DomUtil.get('div_id');
+
+      map.off('click', onClickMap);
+      map.removeLayer(window.marker);
+
       // TODO: remove layer for temp pin
       $pin_bar.empty();
       $('.pin_details').toggleClass('left_side', 300, 'easeOutQuint');
       $('.toggle_button').toggleClass('toggle_close');
     });
-    //maybe some more code here
-
 
     //favourite map buttons
     $.get(`/api/faveMaps/${user_id}`, (obj) => {
@@ -317,9 +404,6 @@ $(document).ready(function () {
       }
     })
   };
-
-
-
 
   /* get current logged in user object from the users table and set it to global variable
   which includes id, username, password, latitue, longitude */

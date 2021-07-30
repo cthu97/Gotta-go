@@ -12,7 +12,6 @@ module.exports = (db) => {
     WHERE user_id = $1;`, [user_id])
       .then(data => {
         const faveMaps = data.rows;
-        console.log(`favemaps:`, faveMaps)
         res.json(faveMaps);
       })
       .catch(err => {

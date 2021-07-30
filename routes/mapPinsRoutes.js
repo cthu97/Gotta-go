@@ -2,17 +2,15 @@ const express = require('express');
 const router = express.Router();
 
 module.exports = (db) => {
-  //retrieves all maps in database
+  //retrieve pins for specific map in database
   router.get("/:id", (req, res) => {
-    //    console.log('/api/mapPins');
     const map_id = req.params.id;
-    db.query(`SELECT map_pins.pin_id, pins.title, pins.latitude, pins.longitude
+    db.query(`SELECT pins.*
       FROM map_pins
-      JOIN pins ON pins.id =  pin_id
+      JOIN pins ON pins.id = pin_id
       WHERE map_id = $1;`, [map_id])
       .then(data => {
         const mapPins = data.rows;
-        console.log(mapPins)
         res.json(mapPins);
       })
       .catch(err => {
@@ -23,14 +21,15 @@ module.exports = (db) => {
   });
 
   //add map
-  router.post("/", (req, res) => {
-    const { map_id, pin_id } = req.body;
-    console.log('post /api/mapPins req.body:', req.body);
-    db.query(`INSERT INTO map_pins (map_id, pin_id) VALUES ($1, $2) RETURNING *;`, [map_id, pin_id])
+  router.post("/:map_id", (req, res) => {
+    const map_id = req.params.map_id;
+    const id = req.body;
+    console.log('id from req.body id:', id.pinID);
+    db.query(`INSERT INTO map_pins (map_id, pin_id) VALUES ($1, $2) RETURNING *;`, [map_id, id.pinID])
       .then(data => {
         const mapPins = data.rows[0];
         res
-          .json({ mapPins });
+          .json(mapPins);
       })
       .catch(err => {
         res
@@ -40,11 +39,12 @@ module.exports = (db) => {
   });
 
   //delete map
-  router.delete("/:id", (req, res) => {
-    const values = req.params.id;
-    db.query(`DELETE FROM map_pins WHERE id = $1;`, [values])
+  router.delete("/:pin_id/:map_id", (req, res) => {
+    const {pin_id, map_id} = req.params;
+    console.log('inside route deleting', pin_id, map_id)
+    db.query(`DELETE FROM map_pins WHERE pin_id = $1 AND map_id = $2;`, [pin_id, map_id])
       .then(data => {
-        res.json({ success: true });
+        res.json(map_id);
       })
       .catch(err => {
         res

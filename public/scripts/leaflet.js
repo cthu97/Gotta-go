@@ -3,18 +3,7 @@ $(() => {
   map.locate({ setView: true, maxZoom: 15 })
   // console.log(getUser())
   //use getUser(), use window.user
-  const userLocation = function() {
-    const userCoords = [window.user.latitude, window.user.longitude];
-    return userCoords
 
-    // $.get('/api/users/', (obj) => {
-    //   const user_id = obj.user_id;
-    //   $.get(`/api/users/${user_id}/location`, (obj) => {
-    //     const location = [obj.userData[0].latitude, obj.userData[0].longitude];
-    //     console.log("location in func: ", location);
-    //   })
-    // });
-  };
 
 
 
@@ -23,11 +12,9 @@ $(() => {
   //set to true if create map is selected
   const createMap = false;
 
-  const userDistance = (location) => {return Math.round(map.distance(userLocation(), location))};
-
-
   function makePin(pin) {
     const marker = L.marker([pin.latitude, pin.longitude]);
+    marker.pin_id = pin.id;
     const title = pin.title;
     const description = pin.description;
     //create popup
@@ -52,9 +39,8 @@ $(() => {
       $('div.pin_container').empty();
       $('div.pin_container').append($nav);
       $('div.pin_details').addClass('left_side') //animate this
-      $('.toggle_button').removeClass('toggle_close').addClass('toggle_open')
-      // $('.pin_details').toggleClass('left_side', 300, 'easeOutQuint');
-      // $('.toggle_button').toggleClass('toggle_close');
+      $('.toggle_button').removeClass('toggle_open').addClass('toggle_close')
+      map.flyTo([pin.latitude, pin.longitude], 15);
     })
     return marker;
   }
@@ -71,27 +57,70 @@ $(() => {
     }
   }
 
-  //add Pins to Map
-  $.get('/api/pins', (obj) => {
-    for (const pin of obj.pins) {
-      makePin(pin).addTo(map)
+  // get all pins
+  window.getAllPins = (cb) => {
+    map.eachLayer(function (layer) {
+      if (layer.map_id) {
+        map.removeLayer(layer);
+      }
+    });
+    if (window.allPins) {
+      map.removeLayer(window.allPins);
+    }
+    $.get('/api/pins/', (obj) => {
+      window.allPins = L.layerGroup();
+      for (const pin of obj.pins) {
+        const temp = makePin(pin);
+        temp.addTo(allPins);
+      }
+      window.allPins.addTo(window.map);
+    });
+  };
+  getAllPins();
+
+  // map: {{mapleLayer1: [marker1, marker 2]}, {mapleLayer2: [marker1, marker 2]}, {mapleLayer3: [marker1, marker 2]}}
+  // add layers to Map
+  $.get(`/api/maps/`, (maps) => {
+    console.log("getting maps", maps);
+    // global object mapLayers
+    window.mapLayers = L.layerGroup();
+    // for each map
+    for (let i = 0; i < maps.maps.length; i++) {
+      const map = maps.maps[i];
+      const map_id = map.id;
+      // new mapLayer for each map
+      const mapLayer = L.layerGroup();
+      // getting pins from specific map_id
+      $.get(`/api/mapPins/${map_id}`, (pins) => {
+        // add a map_id object to the map and set it to this map's id
+        mapLayer['map_id'] = map_id;
+        for (const i in pins) {
+          const pin = pins[i];
+          const tempPin = makePin(pin);
+          tempPin.addTo(mapLayer);
+        }
+        mapLayer.addTo(window.mapLayers);
+      });
     }
   });
 
+  // //used to control loading of pins/handle lag
+  // map.on('load', function () {
+  //   // $.get(`/api/mapPins/${map_id}`, (obj) => {
 
-  //used to control loading of pins/handle lag
-  map.on('load', function () {
-    $.get('/api/pins', (obj) => {
-      for (const pin of obj.pins) {
-        //if the pin is in a ~100km radius of the center of the map then it will load to the map
-        if (radiusCheck(pin, 0.5)) {
-          makePin(pin);
-        } else {
-          map.remove(pin);
-        }
-      }
-    })
-  })
+  //   // });
+  //   console.log('on map load');
+  //   $.get('/api/pins', (obj) => {
+  //     for (const pin of obj.pins) {
+  //       //if the pin is in a ~100km radius of the center of the map then it will load to the map
+  //       if (radiusCheck(pin, 0.5)) {
+  //         makePin(pin);
+  //       } else {
+  //         map.remove(pin);
+  //       }
+  //     }
+  //   })
+  // })
 
 
   //only works for buttons with class of "mapButtons"

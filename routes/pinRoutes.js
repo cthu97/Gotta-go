@@ -3,7 +3,6 @@ const router = express.Router();
 
 module.exports = (db) => {
   router.get("/", (req, res) => {
-    console.log('/api/pins');
     const values = req.params.id;
     db.query(`SELECT * FROM pins;`)
       .then(data => {
@@ -20,7 +19,6 @@ module.exports = (db) => {
 
   router.get("/:id", (req, res) => {
     const values = req.params.id;
-    console.log('/api/pins/' + values);
     db.query(`SELECT * FROM pins WHERE id = $1;`, [values])
       .then(data => {
         const pins = data.rows;
@@ -36,13 +34,16 @@ module.exports = (db) => {
 
 
   //add pins
-  router.post("/:id", (req, res) => {
-    const { user_id, title, description, latitude, longitude, image } = req.body;
-    db.query(`INSERT INTO pins (user_id, title, description, latitude, longitude, image) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`, [user_id, title, description, latitude, longitude, image])
+  router.post("/", (req, res) => {
+    const { creator_id, title, description, latitude, longitude, image_url, map_id} = req.body;
+    console.log(`post called /api/pins/ posted data: ${req.body.title}`)
+    db.query(`INSERT INTO pins (creator_id, title, description, latitude, longitude, image_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;`, [creator_id, title, description, latitude, longitude, image_url])
       .then(data => {
-        const pins = data.rows[0];
+        const pin = data.rows;
+        console.log(`/api/pins/ posted data:`, data)
+        console.log(`/api/pins/ posted data:`, pin)
         res
-          .json({ pins });
+          .json({pin, map_id});
       })
       .catch(err => {
         res
