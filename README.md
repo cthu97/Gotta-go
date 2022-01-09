@@ -5,10 +5,6 @@ Gotta Go is an application that displays nearby washrooms. Users can create user
 
 It uses the Leaflet.js API to add, remove pins and render the map.
 
-## Final Product
-
-Todo: take screen shots
-
 ## Tech Stack
 * Node.JS
 * Express
